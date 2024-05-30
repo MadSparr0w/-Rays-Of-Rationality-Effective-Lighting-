@@ -1,0 +1,84 @@
+from math import pi, ceil
+
+energy_tariff = float(input("Введите тариф электроэнергии (рублей/кВтч): "))
+district = input("Выберите район из 'Ворошиловский', 'Советский', 'Октябрьский': ")
+
+
+class City:
+    def __init__(self, name, city_area, non_building_area):
+        self.city_area = city_area
+        self.non_building_area = non_building_area
+        self.name = name
+
+
+class StreetLight:
+    def __init__(self, radius, energy_consumption, city: City):
+        self.area = radius ** 2 * pi
+        self.energy_consumption = energy_consumption
+        self.city = city
+
+    def calculate_lighting(self):
+        total_building_area = self.city.city_area - self.city.non_building_area
+        num_lights = total_building_area / self.area
+        energy_consumption_total = num_lights * self.energy_consumption
+
+        if total_building_area % self.area == 0:
+            print(total_building_area, "- Площадь застройки (м^2)")
+            print(int(num_lights), "- Количество фонарей (шт)")
+            print(int(energy_consumption_total), "- Энергопотребление фонарей (кВтч в день)")
+        else:
+            num_lights = total_building_area // self.area + 1
+            print(total_building_area, "- Площадь застройки (м^2)")
+            print(int(num_lights), "- Количество фонарей (шт)")
+            print(int(energy_consumption_total), "- Энергопотребление фонарей (кВтч в день)")
+        return num_lights
+
+    def calculate_energy_consumption(self):
+        return self.city.city_area / self.area * self.energy_consumption * 365
+
+
+class CentralCity:
+    def __init__(self, light_before_modern: StreetLight, light_after_modern: StreetLight, city: City):
+        self.city = city
+        self.non_building_areaq = city.non_building_area
+        self.light_before_modern = light_before_modern
+        self.light_after_modern = light_after_modern
+        self.name = city.name
+
+    def show_info_before_modernization(self):
+        cost_before = ceil(self.light_before_modern.calculate_energy_consumption())
+        print(f"До модернизации в районе {self.name} стояли лампы с энергопотреблением",
+              f"{self.light_before_modern.energy_consumption} кВтч в день.")
+        print(f"Это обошлось в {cost_before} кВтч в год.")
+        print(f"Стоимость составляла {cost_before * energy_tariff} руб. в год.")
+
+    def show_info_after_modernization(self):
+        cost_before = ceil(self.light_before_modern.calculate_energy_consumption())
+        num_lights_after_modernization = self.light_after_modern.calculate_lighting()
+        savings = ceil(cost_before - self.light_after_modern.calculate_energy_consumption())
+        savings_money = ceil(cost_before * energy_tariff -
+                             self.light_after_modern.calculate_energy_consumption() * energy_tariff)
+        print(f"После модернизации количество фонарей стало {num_lights_after_modernization}, что привело к экономии.")
+        print(f"Экономия составила {savings} кВтч в год.")
+        print(f"Экономия составила {savings_money} руб. в год.")
+        print(f"Энергопотребление стало {self.light_after_modern.energy_consumption} кВтч в день.")
+
+
+cities = {
+    "Ворошиловский": City("Ворошиловский", 39100, 13685),
+    "Советский": City("Советский", 85400, 29890),
+    "Октябрьский": City("Октябрьский", 49500, 17325)
+}
+
+if __name__ == "__main__":
+    selected_city = cities.get(district)
+    while selected_city is None:
+        district = input("Выберите район из 'Ворошиловский', 'Советский', 'Октябрьский': ")
+        selected_city = cities.get(district)
+
+    old_lamp = StreetLight(5, 210, selected_city)
+    new_lamp = StreetLight(5, 180, selected_city)
+
+    result = CentralCity(old_lamp, new_lamp, selected_city)
+    result.show_info_before_modernization()
+    result.show_info_after_modernization()
